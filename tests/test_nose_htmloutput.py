@@ -1,4 +1,4 @@
-from __future__ import print_function
+# from __future__ import print_function
 
 from process_tests import dump_on_error
 from process_tests import TestProcess

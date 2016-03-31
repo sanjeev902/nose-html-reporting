@@ -26,7 +26,7 @@ setup(
     long_description="%s\n%s" % (read("README.rst"), re.sub(":obj:`~?(.*?)`", r"``\1``", read("CHANGELOG.rst"))),
     author="Ivan Lysenko",
     author_email="lysenko_i@mail.ru",
-    url="https://github.com/lysenkoivan/nose-html-reporting",
+    url="https://github.com/sanjeev902/nose-html-reporting",
     packages=find_packages("src"),
     package_dir={"": "src"},
     py_modules=[splitext(basename(i))[0] for i in glob.glob("src/*.py")],
