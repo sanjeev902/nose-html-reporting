@@ -1,4 +1,4 @@
-import StringIO
+import io
 import re
 import codecs
 import inspect
@@ -55,19 +55,8 @@ def nice_classname(obj):
 def exc_message(exc_info):
     """Return the exception's message."""
     exc = exc_info[1]
-    if exc is None:
-        # str exception
-        result = exc_info[0]
-    else:
-        try:
-            result = str(exc)
-        except UnicodeEncodeError:
-            try:
-                result = unicode(exc)  # flake8: noqa
-            except UnicodeError:
-                # Fallback to args as neither str nor
-                # unicode(Exception(u'\xe6')) work in Python < 2.6
-                result = exc.args[0]
+    result = exc_info[0] if exc is None else str(exc)
+
     return result
 
 
@@ -115,8 +104,8 @@ class HtmlReport(Plugin):
         self.global_stderr0 = None
         self.test_stdout0 = None
         self.test_stderr0 = None
-        self.testOutputBuffer = StringIO.StringIO()
-        self.globalOutputBuffer = StringIO.StringIO()
+        self.testOutputBuffer = io.StringIO()
+        self.globalOutputBuffer = io.StringIO()
         self.stdout_redirector = OutputRedirector(sys.stdout)
         self.stderr_redirector = OutputRedirector(sys.stderr)
         self.test_stdout_redirector = OutputRedirector(sys.stdout)
@@ -126,7 +115,7 @@ class HtmlReport(Plugin):
 
     def startTest(self, test):
         # just one buffer for both stdout and stderr
-        self.testOutputBuffer = StringIO.StringIO()
+        self.testOutputBuffer = io.StringIO()
         self.test_stdout_redirector.fp = self.testOutputBuffer
         self.test_stderr_redirector.fp = self.testOutputBuffer
         self.test_stdout0 = sys.stdout
@@ -222,7 +211,7 @@ class HtmlReport(Plugin):
         self.report_file.write(self.jinja.get_template(os.path.basename(self.report_template_filename)).render(
             report=self.report_data,
             stats=self.stats,
-            rawoutput=self._format_output(self.complete_global_output())
+            rawoutput=self.complete_global_output()
         ))
         self.report_file.close()
         if self.config.verbosity > 1:
@@ -237,7 +226,7 @@ class HtmlReport(Plugin):
         group.tests.append({
             'name': name[-1],
             'failed': False,
-            'output': self._format_output(self.complete_test_output()),
+            'output': self.complete_test_output(),
             'shortDescription': test.shortDescription(),
             'time': str(datetime.now() - self.test_start_time),
         })
@@ -268,7 +257,7 @@ class HtmlReport(Plugin):
             'errtype': nice_classname(err[0]),
             'message': exc_message(err),
             'tb': tb,
-            'output': self._format_output(self.complete_test_output(exc_message(err), tb)),
+            'output': self.complete_test_output(exc_message(err), tb),
             'shortDescription': test.shortDescription(),
             'time': str(datetime.now() - self.test_start_time),
         })
@@ -292,13 +281,13 @@ class HtmlReport(Plugin):
             'errtype': nice_classname(err[0]),
             'message': exc_message(err),
             'tb': tb,
-            'output': self._format_output(self.complete_test_output(exc_message(err), tb)),
+            'output': self.complete_test_output(exc_message(err), tb),
             'shortDescription': test.shortDescription(),
             'time': str(datetime.now() - self.test_start_time),
         })
-
-    def _format_output(self, o):
-        if isinstance(o, str):
-            return o.decode('latin-1')
-        else:
-            return o
+    #
+    # def _format_output(self, o):
+    #     if isinstance(o, str):
+    #         return o.decode('latin-1')
+    #     else:
+    #         return o
